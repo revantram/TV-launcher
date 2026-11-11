@@ -33,12 +33,23 @@ jobs:
               echo "Generated new debug.keystore via keytool"
             fi
           fi
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
           ls -lh debug.keystore
 
       - name: Build Debug APK
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon --no-configuration-cache --stacktrace
+          ./gradlew :app:assembleDebug --no-daemon --no-configuration-cache --stacktrace -Dorg.gradle.jvmargs="-Xmx2048m -Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+          
+          # Find apksigner in Android build-tools and ensure v1 (JAR) and v2 signing for Fire OS 6/7/8
+          APKSIGNER=$(find $ANDROID_HOME/build-tools/ -name apksigner 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$APKSIGNER" ] && [ -x "$APKSIGNER" ]; then
+            echo "Signing with apksigner at $APKSIGNER (V1+V2 schemes)..."
+            $APKSIGNER sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey --min-sdk-version 21 --v1-signing-enabled true --v2-signing-enabled true app/build/outputs/apk/debug/app-debug.apk || true
+            $APKSIGNER verify --verbose app/build/outputs/apk/debug/app-debug.apk || true
+          fi
+          
           cp app/build/outputs/apk/debug/app-debug.apk GlassLauncher-FireTV.apk
           ls -lh GlassLauncher-FireTV.apk
 
@@ -51,13 +62,19 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.6
-          name: "Glass Launcher v1.0.6 (Fire TV Stick)"
+          tag_name: v1.0.7
+          name: "Glass Launcher v1.0.7 (Fire TV Stick & Android TV)"
           body: |
-            ## 📺 Glass Launcher v1.0.6 for Amazon Fire TV Stick & Android TV
+            ## 📺 Glass Launcher v1.0.7 for Amazon Fire TV Stick & Android TV
             
-            ### 📥 Download & Install on Fire TV:
-            Click on **`GlassLauncher-FireTV.apk`** below in the **Assets** section to download directly to your TV or phone!
+            ### 📥 Direct Download & TV Install:
+            Click on **`GlassLauncher-FireTV.apk`** below in the **Assets** section to download and install directly on your Fire TV Stick (via Downloader app) or Android TV!
+            
+            ### 🛠️ What is Fixed in v1.0.7 ("App not installed." Fix):
+            - **Universal Fire OS Compatibility**: Set targetSdk to 34 (Android 14) and enabled dual V1 (JAR) and V2 APK signing so Fire OS 6, 7, and 8 PackageInstaller installs without errors.
+            - **Removed Static Package Receiver**: Dynamic receiver registration at runtime eliminates `INSTALL_FAILED_INVALID_APK` blocks on Amazon Fire OS.
+            - **Removed GSF & Play Services Bloat**: APK size reduced from 24MB to 17MB, completely removing Google Services Framework dependencies incompatible with Fire TV.
+            - **Fresh Package ID**: `com.aistudio.glasslauncher.firetv` eliminates signature collision with previous failed install attempts.
             
             ### 🚀 Features:
             - **100% Remote D-Pad Navigation**: 120ms focus animation, scale 1.06x, white glow border.

@@ -30,10 +30,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val packageReceiver = com.example.receiver.PackageChangeReceiver()
+
+    override fun onStart() {
+        super.onStart()
+        val filter = android.content.IntentFilter().apply {
+            addAction(android.content.Intent.ACTION_PACKAGE_ADDED)
+            addAction(android.content.Intent.ACTION_PACKAGE_REMOVED)
+            addAction(android.content.Intent.ACTION_PACKAGE_REPLACED)
+            addDataScheme("package")
+        }
+        registerReceiver(packageReceiver, filter)
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.recordUserActivity()
         viewModel.loadInstalledApps()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        try {
+            unregisterReceiver(packageReceiver)
+        } catch (_: Exception) { }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
