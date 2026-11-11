@@ -26,34 +26,37 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build Debug APK
-        run: gradle :app:assembleDebug --stacktrace
+        run: |
+          gradle :app:assembleDebug --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk GlassLauncher-FireTV.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GlassLauncher-FireTV-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: GlassLauncher-FireTV
+          path: GlassLauncher-FireTV.apk
 
-      - name: Create GitHub Release
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
           tag_name: v1.0.0
           name: "Glass Launcher v1.0.0 (Fire TV Stick)"
           body: |
-            ## Glass Launcher v1.0.0 for Amazon Fire TV Stick & Android TV
+            ## 📺 Glass Launcher v1.0.0 for Amazon Fire TV Stick & Android TV
             
-            ### Features:
-            - **60 FPS Liquid Glass UI**: Lightweight, lag-free on 1GB RAM Fire TV Sticks.
-            - **Home Button Intercept**: Accessibility service hook for Fire OS remote Home button.
-            - **Full Remote D-Pad Navigation**: 120ms focus animation, Menu key context menu.
-            - **RAM Booster**: 1-click memory optimizer with real-time feedback.
-            - **Burn-In Protection**: Deep black OLED screensaver with drifting clock.
-            - **Universal App Scanner**: Amazon Appstore, Leanback TV, and Sideloaded APKs.
+            ### 🚀 Highlights:
+            - **60 FPS Liquid Glass UI**: Lightweight iOS-inspired glassmorphism, 100% lag-free on 1GB RAM Fire TV Sticks.
+            - **Home Button Intercept**: Accessibility Service hook catches Fire TV Home button and returns immediately to Glass Launcher.
+            - **Remote D-Pad Optimization**: 120ms focus animation, scale 1.06x, white glow border, Menu button context menu.
+            - **Universal App Scanner**: Discovers Amazon Appstore apps, Android TV Leanback apps, and Sideloaded APKs.
+            - **1-Click RAM Booster**: Clears icon cache and triggers GC with real-time freed memory pill.
+            - **OLED Screen Burn-In Protection**: 15-minute inactivity deep-black ambient clock mode.
             
-            ### Download:
-            Download the `GlassLauncher-FireTV.apk` asset below and install using Downloader or Send Files to TV.
-          files: app/build/outputs/apk/debug/app-debug.apk
+            ### 📥 Download & Install:
+            1. Download the **`GlassLauncher-FireTV.apk`** asset below.
+            2. Send it to your Fire TV Stick using **Send Files to TV** or **Downloader**.
+            3. Open and install!
+          files: GlassLauncher-FireTV.apk
           draft: false
           prerelease: false
         env:
