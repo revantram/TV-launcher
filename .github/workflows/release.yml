@@ -16,30 +16,50 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Verify APK Asset
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make Gradlew Executable
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
         run: |
-          ls -lh dist/GlassLauncher-FireTV.apk
+          ./gradlew :app:assembleDebug --no-daemon --no-configuration-cache --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk GlassLauncher-FireTV.apk
+          ls -lh GlassLauncher-FireTV.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlassLauncher-FireTV
+          path: GlassLauncher-FireTV.apk
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1
-          name: "Glass Launcher v1.0.1 (Fire TV Stick)"
+          tag_name: v1.0.2
+          name: "Glass Launcher v1.0.2 (Fire TV Stick)"
           body: |
-            ## 📺 Glass Launcher v1.0.1 for Amazon Fire TV Stick & Android TV
+            ## 📺 Glass Launcher v1.0.2 for Amazon Fire TV Stick & Android TV
             
             ### 📥 Download & Install on Fire TV:
-            Click on **`GlassLauncher-FireTV.apk`** in the **Assets** section below to download directly to your TV or phone!
+            Click on **`GlassLauncher-FireTV.apk`** below in the **Assets** section to download directly to your TV or phone!
             
-            ### 🚀 Highlights:
+            ### 🚀 Features:
             - **100% Remote D-Pad Navigation**: 120ms focus animation, scale 1.06x, white glow border.
-            - **Alphabet Quick-Jump (A-Z Bar)**: Jump directly to apps by letter with 1 click on remote.
+            - **Alphabet Quick-Jump (A-Z Bar)**: Jump directly to apps by first letter with 1 click on Fire TV remote.
             - **Fire OS Home Button Intercept**: Accessibility hook returns to Glass Launcher when Home is pressed.
             - **On-Screen Remote Key Legend**: Visual hints for `[OK] Open`, `[MENU] Options`, `[REW] Top`, `[FF] Filter`, `[BACK] Home`.
             - **1-Click RAM Booster**: Clears icon cache with real-time freed memory pill.
             - **OLED Screen Burn-In Protection**: 15-minute inactivity deep-black ambient clock saver.
             - **Universal App Scanner**: Amazon Appstore, Leanback TV, and Sideloaded APKs.
-          files: dist/GlassLauncher-FireTV.apk
+          files: GlassLauncher-FireTV.apk
           make_latest: true
           draft: false
           prerelease: false
