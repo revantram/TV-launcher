@@ -1,0 +1,60 @@
+name: Build and Release Glass Launcher APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build Debug APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlassLauncher-FireTV-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: "Glass Launcher v1.0.0 (Fire TV Stick)"
+          body: |
+            ## Glass Launcher v1.0.0 for Amazon Fire TV Stick & Android TV
+            
+            ### Features:
+            - **60 FPS Liquid Glass UI**: Lightweight, lag-free on 1GB RAM Fire TV Sticks.
+            - **Home Button Intercept**: Accessibility service hook for Fire OS remote Home button.
+            - **Full Remote D-Pad Navigation**: 120ms focus animation, Menu key context menu.
+            - **RAM Booster**: 1-click memory optimizer with real-time feedback.
+            - **Burn-In Protection**: Deep black OLED screensaver with drifting clock.
+            - **Universal App Scanner**: Amazon Appstore, Leanback TV, and Sideloaded APKs.
+            
+            ### Download:
+            Download the `GlassLauncher-FireTV.apk` asset below and install using Downloader or Send Files to TV.
+          files: app/build/outputs/apk/debug/app-debug.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
