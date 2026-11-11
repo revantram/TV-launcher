@@ -16,19 +16,30 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Extract Pre-Built APK
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Ensure Debug Keystore
         run: |
-          if [ -f "dist/apk_base64.txt" ]; then
-            echo "Extracting APK from dist/apk_base64.txt..."
-            base64 -d dist/apk_base64.txt > GlassLauncher-FireTV.apk
-          elif [ -f "dist/GlassLauncher-FireTV.apk" ]; then
-            cp dist/GlassLauncher-FireTV.apk GlassLauncher-FireTV.apk
-          else
-            echo "Fallback building APK..."
-            chmod +x gradlew || true
-            ./gradlew :app:assembleDebug --no-daemon --no-configuration-cache || true
-            cp app/build/outputs/apk/debug/app-debug.apk GlassLauncher-FireTV.apk || true
+          if [ ! -f "debug.keystore" ]; then
+            if [ -f "debug.keystore.base64" ]; then
+              base64 -d debug.keystore.base64 > debug.keystore
+              echo "Decoded debug.keystore from base64"
+            else
+              keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+              echo "Generated new debug.keystore via keytool"
+            fi
           fi
+          ls -lh debug.keystore
+
+      - name: Build Debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --no-configuration-cache --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk GlassLauncher-FireTV.apk
           ls -lh GlassLauncher-FireTV.apk
 
       - name: Upload APK Artifact
@@ -40,10 +51,10 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.5
-          name: "Glass Launcher v1.0.5 (Fire TV Stick)"
+          tag_name: v1.0.6
+          name: "Glass Launcher v1.0.6 (Fire TV Stick)"
           body: |
-            ## 📺 Glass Launcher v1.0.5 for Amazon Fire TV Stick & Android TV
+            ## 📺 Glass Launcher v1.0.6 for Amazon Fire TV Stick & Android TV
             
             ### 📥 Download & Install on Fire TV:
             Click on **`GlassLauncher-FireTV.apk`** below in the **Assets** section to download directly to your TV or phone!
