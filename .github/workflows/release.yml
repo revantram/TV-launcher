@@ -22,14 +22,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Make Gradlew Executable
-        run: chmod +x gradlew
+      - name: Accept Android SDK Licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || yes | sdkmanager --licenses 2>/dev/null || true
 
       - name: Build Debug APK
         run: |
+          chmod +x gradlew
           ./gradlew :app:assembleDebug --no-daemon --no-configuration-cache --stacktrace
           cp app/build/outputs/apk/debug/app-debug.apk GlassLauncher-FireTV.apk
           ls -lh GlassLauncher-FireTV.apk
@@ -43,10 +41,10 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
-          name: "Glass Launcher v1.0.2 (Fire TV Stick)"
+          tag_name: v1.0.3
+          name: "Glass Launcher v1.0.3 (Fire TV Stick)"
           body: |
-            ## 📺 Glass Launcher v1.0.2 for Amazon Fire TV Stick & Android TV
+            ## 📺 Glass Launcher v1.0.3 for Amazon Fire TV Stick & Android TV
             
             ### 📥 Download & Install on Fire TV:
             Click on **`GlassLauncher-FireTV.apk`** below in the **Assets** section to download directly to your TV or phone!
