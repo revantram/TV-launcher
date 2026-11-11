@@ -36,7 +36,10 @@ data class LauncherUiState(
     val screensaverTimeoutMinutes: Int = 15,
     val isSettingsOpen: Boolean = false,
     val isAccessibilityEnabled: Boolean = false,
-    val isUnhideDialogOpen: Boolean = false
+    val isUnhideDialogOpen: Boolean = false,
+    val currentlyFocusedApp: AppItem? = null,
+    val scrollToTopTrigger: Long = 0L,
+    val selectedAlphabet: String? = null
 )
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
@@ -128,6 +131,36 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         applyFilters()
     }
 
+    fun setAlphabetFilter(letter: String?) {
+        recordUserActivity()
+        val newLetter = if (_uiState.value.selectedAlphabet == letter) null else letter
+        _uiState.value = _uiState.value.copy(selectedAlphabet = newLetter)
+        applyFilters()
+    }
+
+    fun cycleNextCategory() {
+        recordUserActivity()
+        val current = _uiState.value.selectedCategory
+        val next = when (current) {
+            AppCategory.ALL -> AppCategory.AMAZON_TV
+            AppCategory.AMAZON_TV -> AppCategory.SIDELOADED
+            AppCategory.SIDELOADED -> AppCategory.FAVORITES
+            AppCategory.FAVORITES -> AppCategory.ALL
+        }
+        setCategory(next)
+        showSnackbar("Filter: ${next.name.replace("_", " ")}")
+    }
+
+    fun triggerScrollToTop() {
+        recordUserActivity()
+        _uiState.value = _uiState.value.copy(scrollToTopTrigger = System.currentTimeMillis())
+        showSnackbar("Jumped to Top")
+    }
+
+    fun setFocusedApp(app: AppItem?) {
+        _uiState.value = _uiState.value.copy(currentlyFocusedApp = app)
+    }
+
     private fun applyFilters() {
         val state = _uiState.value
         var list = when (state.selectedCategory) {
@@ -135,6 +168,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             AppCategory.FAVORITES -> state.favoriteApps
             AppCategory.AMAZON_TV -> state.allApps.filter { !it.isSideloaded }
             AppCategory.SIDELOADED -> state.allApps.filter { it.isSideloaded }
+        }
+
+        if (state.selectedAlphabet != null) {
+            val letter = state.selectedAlphabet.uppercase()
+            list = list.filter { it.label.uppercase().startsWith(letter) }
         }
 
         if (state.searchQuery.isNotBlank()) {

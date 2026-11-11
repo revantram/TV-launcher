@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
@@ -61,14 +62,26 @@ fun AppsGridSection(
     onSearchChange: (String) -> Unit,
     onAppClick: (AppItem) -> Unit,
     onAppLongClick: (AppItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedAlphabet: String? = null,
+    onAlphabetSelect: ((String?) -> Unit)? = null,
+    scrollToTopTrigger: Long = 0L,
+    onAppFocused: ((AppItem) -> Unit)? = null
 ) {
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+
+    androidx.compose.runtime.LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0L) {
+            gridState.animateScrollToItem(0)
+        }
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         // Category Filter Bar & Search
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -198,10 +211,40 @@ fun AppsGridSection(
                 }
             }
         } else {
+            // D-Pad Remote Accessible Alphabet Quick-Jump Bar
+            if (apps.size > 8) {
+                androidx.compose.foundation.lazy.LazyRow(
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    item {
+                        AlphabetChip(
+                            letter = "ALL",
+                            isSelected = selectedAlphabet == null,
+                            onClick = { onAlphabetSelect?.invoke(null) }
+                        )
+                    }
+                    val alphabet = ('A'..'Z').map { it.toString() }
+                    items(alphabet) { letter ->
+                        val hasApps = apps.any { it.label.uppercase().startsWith(letter) }
+                        if (hasApps) {
+                            AlphabetChip(
+                                letter = letter,
+                                isSelected = selectedAlphabet == letter,
+                                onClick = { onAlphabetSelect?.invoke(letter) }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
             // High-Performance Recycled LazyVerticalGrid
             LazyVerticalGrid(
+                state = gridState,
                 columns = GridCells.Adaptive(minSize = 140.dp),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(top = 4.dp, bottom = 48.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize()
@@ -214,11 +257,57 @@ fun AppsGridSection(
                         app = app,
                         onClick = { onAppClick(app) },
                         onLongClick = { onAppLongClick(app) },
-                        isCompact = false
+                        isCompact = false,
+                        onFocused = { onAppFocused?.invoke(app) }
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AlphabetChip(
+    letter: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val shape = RoundedCornerShape(10.dp)
+    val bgColor = when {
+        isFocused -> Color(0x7038BDF8)
+        isSelected -> Color(0x4038BDF8)
+        else -> Color(0x18FFFFFF)
+    }
+    val borderColor = when {
+        isFocused -> Color.White
+        isSelected -> GlassAccentCyan
+        else -> Color.Transparent
+    }
+
+    Box(
+        modifier = Modifier
+            .scale(if (isFocused) 1.15f else 1.0f)
+            .clip(shape)
+            .background(bgColor)
+            .border(if (isFocused || isSelected) 1.5.dp else 0.dp, borderColor, shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .focusable(interactionSource = interactionSource)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = letter,
+            color = if (isSelected || isFocused) Color.White else TextSecondary,
+            fontSize = 11.sp,
+            fontWeight = if (isSelected || isFocused) FontWeight.Bold else FontWeight.Medium
+        )
     }
 }
 

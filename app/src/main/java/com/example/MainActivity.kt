@@ -55,12 +55,35 @@ class MainActivity : ComponentActivity() {
             if (event.keyCode == KeyEvent.KEYCODE_MENU && event.action == KeyEvent.ACTION_UP) {
                 if (state.contextMenuApp != null) {
                     viewModel.closeContextMenu()
+                } else if (state.currentlyFocusedApp != null) {
+                    viewModel.openContextMenu(state.currentlyFocusedApp)
                 } else if (state.isSettingsOpen) {
                     viewModel.closeSettings()
                 } else {
                     viewModel.openSettings()
                 }
                 return true
+            }
+
+            // Remote Media Rewind (Jump to Top)
+            if (event.keyCode == KeyEvent.KEYCODE_MEDIA_REWIND && event.action == KeyEvent.ACTION_UP) {
+                viewModel.triggerScrollToTop()
+                return true
+            }
+
+            // Remote Media Fast-Forward (Cycle Category Filter)
+            if (event.keyCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD && event.action == KeyEvent.ACTION_UP) {
+                viewModel.cycleNextCategory()
+                return true
+            }
+
+            // Remote Play/Pause (Quick launch focused app)
+            if (event.keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE && event.action == KeyEvent.ACTION_UP) {
+                val focused = state.currentlyFocusedApp
+                if (focused != null) {
+                    viewModel.launchApp(focused)
+                    return true
+                }
             }
 
             // Handle Back key (KEYCODE_BACK)

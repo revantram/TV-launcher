@@ -64,10 +64,17 @@ fun AppCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isCompact: Boolean = false
+    isCompact: Boolean = false,
+    onFocused: (() -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+
+    androidx.compose.runtime.LaunchedEffect(isFocused) {
+        if (isFocused) {
+            onFocused?.invoke()
+        }
+    }
 
     // 120ms ultra-smooth hardware-accelerated D-Pad focus animation (Scale 1.05x)
     val animatedScale by animateFloatAsState(

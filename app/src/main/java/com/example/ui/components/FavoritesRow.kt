@@ -39,7 +39,8 @@ fun FavoritesRow(
     favorites: List<AppItem>,
     onAppClick: (AppItem) -> Unit,
     onAppLongClick: (AppItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAppFocused: ((AppItem) -> Unit)? = null
 ) {
     if (favorites.isEmpty()) return
 
@@ -86,7 +87,8 @@ fun FavoritesRow(
                     app = app,
                     onClick = { onAppClick(app) },
                     onLongClick = { onAppLongClick(app) },
-                    isCompact = false
+                    isCompact = false,
+                    onFocused = { onAppFocused?.invoke(app) }
                 )
             }
         }

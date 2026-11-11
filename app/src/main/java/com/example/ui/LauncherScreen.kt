@@ -101,7 +101,8 @@ fun LauncherScreen(
                     FavoritesRow(
                         favorites = uiState.favoriteApps,
                         onAppClick = { viewModel.launchApp(it) },
-                        onAppLongClick = { viewModel.openContextMenu(it) }
+                        onAppLongClick = { viewModel.openContextMenu(it) },
+                        onAppFocused = { viewModel.setFocusedApp(it) }
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -116,9 +117,20 @@ fun LauncherScreen(
                     onSearchChange = { viewModel.setSearchQuery(it) },
                     onAppClick = { viewModel.launchApp(it) },
                     onAppLongClick = { viewModel.openContextMenu(it) },
+                    selectedAlphabet = uiState.selectedAlphabet,
+                    onAlphabetSelect = { viewModel.setAlphabetFilter(it) },
+                    scrollToTopTrigger = uiState.scrollToTopTrigger,
+                    onAppFocused = { viewModel.setFocusedApp(it) },
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            // Bottom Remote Key Legend / Navigation Guide
+            com.example.ui.components.RemoteLegendBar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 8.dp)
+            )
 
             // Floating RAM Boost Notification Pill
             RamBoostPill(
