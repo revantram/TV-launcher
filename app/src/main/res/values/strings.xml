@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Glass Launcher</string>
+    <string name="favorites">Favorites</string>
+    <string name="all_apps">All Apps</string>
+    <string name="settings">Settings</string>
+    <string name="ram_boost">Boost RAM</string>
+    <string name="firetv_settings">Fire TV Settings</string>
+    <string name="stock_launcher">Stock Launcher</string>
+    <string name="add_to_favorites">Add to Favorites</string>
+    <string name="remove_from_favorites">Remove from Favorites</string>
+    <string name="hide_app">Hide App</string>
+    <string name="unhide_apps">Unhide Apps</string>
+    <string name="app_info">App Info</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="search_apps">Search apps...</string>
+    <string name="accessibility_service_name">Home Button Interceptor</string>
+    <string name="accessibility_service_desc">Catches Fire TV Home button to return seamlessly to Liquid Glass Launcher.</string>
+</resources>
